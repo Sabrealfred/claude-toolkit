@@ -7,6 +7,67 @@ description: React + Vite + TypeScript + shadcn/ui expert. Use for component dev
 
 Expert knowledge for React 18 + Vite + TypeScript + shadcn/ui stack.
 
+## Required Tools & Dependencies
+
+### CLI Tools
+```bash
+# Verify these are installed
+node --version    # Node.js 18+
+npm --version     # npm 9+
+```
+
+### Core Dependencies
+```bash
+# Create new project
+npm create vite@latest my-app -- --template react-ts
+cd my-app && npm install
+
+# Or add to existing project
+npm install react react-dom typescript vite
+npm install -D @types/react @types/react-dom
+```
+
+### UI Framework (shadcn/ui)
+```bash
+# Initialize shadcn/ui
+npx shadcn-ui@latest init
+
+# Add components as needed
+npx shadcn-ui@latest add button card dialog form input
+npx shadcn-ui@latest add table tabs toast dropdown-menu
+```
+
+### Styling
+```bash
+npm install tailwindcss postcss autoprefixer
+npm install clsx tailwind-merge class-variance-authority
+npx tailwindcss init -p
+```
+
+### State & Data Fetching
+```bash
+npm install @tanstack/react-query zustand
+npm install react-hook-form zod @hookform/resolvers
+```
+
+### Routing
+```bash
+npm install react-router-dom
+```
+
+### Icons
+```bash
+npm install lucide-react
+```
+
+### Full Install Command
+```bash
+npm install react react-dom react-router-dom @tanstack/react-query zustand react-hook-form zod @hookform/resolvers lucide-react clsx tailwind-merge class-variance-authority
+npm install -D typescript @types/react @types/react-dom tailwindcss postcss autoprefixer vite
+```
+
+---
+
 ## Stack Info
 
 | Tech | Version | Notes |

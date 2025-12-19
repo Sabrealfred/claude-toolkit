@@ -7,16 +7,60 @@ description: Supabase expert for RLS policies, migrations, auth debugging, and d
 
 Expert knowledge for Supabase: RLS, migrations, auth, Edge Functions.
 
+## Required Tools & Dependencies
+
+### CLI Tools
+```bash
+# Supabase CLI (required)
+npm install -g supabase
+supabase --version
+
+# PostgreSQL client (optional, for direct DB access)
+apt install postgresql-client  # Ubuntu/Debian
+brew install postgresql        # macOS
+```
+
+### NPM Packages
+```bash
+# Core Supabase client
+npm install @supabase/supabase-js
+
+# For SSR (Next.js, Remix, etc.)
+npm install @supabase/ssr
+
+# Optional: Auth helpers
+npm install @supabase/auth-helpers-react
+```
+
+### Setup Commands
+```bash
+# Login to Supabase
+supabase login
+
+# Link to existing project
+supabase link --project-ref YOUR_PROJECT_REF
+
+# Or initialize new local project
+supabase init
+supabase start  # Starts local Supabase (Docker required)
+```
+
+### Environment Variables
+```bash
+# .env.local
+VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJ...your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=eyJ...your_service_role_key  # Server-side only!
+```
+
+---
+
 ## Connection Info
 
 ```bash
-# Project: matwal-premium
-# Host: db.ieqizooravdkcyujgiot.supabase.co
-# Pooler: aws-0-us-west-1.pooler.supabase.com:6543
-
-# Quick connection test
-PGPASSWORD='MatwalPremium2025!Secure#DB' psql \
-  "postgresql://postgres.ieqizooravdkcyujgiot:MatwalPremium2025%21Secure%23DB@aws-0-us-west-1.pooler.supabase.com:6543/postgres" \
+# Quick connection test (replace with your credentials)
+PGPASSWORD='YOUR_DB_PASSWORD' psql \
+  "postgresql://postgres.YOUR_PROJECT_REF:YOUR_PASSWORD@aws-0-us-west-1.pooler.supabase.com:6543/postgres" \
   -c "SELECT 'Connected!' as status;"
 ```
 

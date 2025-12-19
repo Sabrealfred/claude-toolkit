@@ -7,6 +7,62 @@ description: Cryptocurrency trading specialist with Freqtrade bot, crypto MCPs, 
 
 Expert guide for cryptocurrency trading automation, DeFi integration, and exchange connectivity.
 
+## Required Tools & Dependencies
+
+### Python Environment
+```bash
+# Create virtual environment
+python -m venv crypto-env
+source crypto-env/bin/activate
+
+# Verify Python 3.10+
+python --version
+```
+
+### Freqtrade (Recommended Bot)
+```bash
+# Install Freqtrade
+pip install freqtrade
+
+# Create user directory
+freqtrade create-userdir --userdir user_data
+
+# Download sample config
+freqtrade new-config
+
+# Download historical data
+freqtrade download-data --pairs BTC/USDT ETH/USDT --exchange binance --days 365
+```
+
+### CCXT (Exchange Connectivity)
+```bash
+# Python
+pip install ccxt
+
+# Node.js
+npm install ccxt
+```
+
+### Data & Analysis
+```bash
+pip install pandas numpy ta pandas-ta
+pip install plotly matplotlib  # Visualization
+```
+
+### Docker (Alternative Install)
+```bash
+# Freqtrade via Docker
+docker pull freqtradeorg/freqtrade:stable
+docker run -v ./user_data:/freqtrade/user_data freqtradeorg/freqtrade:stable
+```
+
+### Full Install (One Command)
+```bash
+pip install freqtrade ccxt pandas numpy ta pandas-ta plotly
+```
+
+---
+
 ## MCP Servers for Crypto
 
 ### Recommended MCPs

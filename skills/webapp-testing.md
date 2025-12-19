@@ -7,6 +7,67 @@ description: Web application testing with Playwright MCP. Use for E2E tests, vis
 
 E2E testing with Playwright MCP - the #1 ranked MCP for browser automation.
 
+## Required Tools & Dependencies
+
+### CLI Tools
+```bash
+# Node.js (required)
+node --version  # 18+
+
+# Playwright CLI
+npm install -D @playwright/test
+npx playwright install  # Install browsers (Chromium, Firefox, WebKit)
+```
+
+### NPM Packages
+```bash
+# Playwright Test Runner
+npm install -D @playwright/test
+
+# Unit Testing (Vitest)
+npm install -D vitest @testing-library/react @testing-library/jest-dom jsdom
+
+# React Testing Utilities
+npm install -D @testing-library/user-event
+```
+
+### MCP Servers
+```bash
+# Option 1: Official Microsoft Playwright MCP
+npx @playwright/mcp@latest
+
+# Option 2: Puppeteer MCP (already available in Claude Code)
+# Uses: mcp__puppeteer-mcp-claude__*
+```
+
+### Playwright Config
+```bash
+# Initialize Playwright config
+npx playwright init
+
+# Run tests
+npx playwright test
+
+# Debug mode
+npx playwright test --debug
+
+# Visual UI
+npx playwright test --ui
+```
+
+### Environment Setup
+```bash
+# Install browsers
+npx playwright install chromium
+npx playwright install firefox
+npx playwright install webkit
+
+# Or install all
+npx playwright install
+```
+
+---
+
 ## Playwright MCP Setup
 
 ### Install Official Microsoft Playwright MCP

@@ -7,6 +7,63 @@ description: Quant developer expert for algorithmic trading with QuantConnect LE
 
 Expert guide for algorithmic trading development using QuantConnect LEAN and related tools.
 
+## Required Tools & Dependencies
+
+### Python Environment
+```bash
+# Create virtual environment
+python -m venv quant-env
+source quant-env/bin/activate  # Linux/Mac
+# or: quant-env\Scripts\activate  # Windows
+
+# Verify Python 3.10+
+python --version
+```
+
+### Core Tools
+```bash
+# LEAN CLI (QuantConnect local)
+pip install lean
+
+# Initialize LEAN
+lean init
+lean login  # Optional for cloud features
+```
+
+### Trading Libraries
+```bash
+# Core backtesting
+pip install backtrader zipline-reloaded vectorbt
+
+# Data & Analysis
+pip install pandas numpy scipy
+
+# Technical Analysis
+pip install ta-lib pandas-ta
+# Note: TA-Lib may require system dependencies:
+# Ubuntu: apt install libta-lib0-dev
+# macOS: brew install ta-lib
+```
+
+### Data Sources
+```bash
+# Yahoo Finance
+pip install yfinance
+
+# Alpha Vantage (needs API key)
+pip install alpha-vantage
+
+# Interactive Brokers
+pip install ib_insync
+```
+
+### Full Install (One Command)
+```bash
+pip install lean backtrader vectorbt pandas numpy scipy yfinance pandas-ta matplotlib plotly
+```
+
+---
+
 ## Quick Reference
 
 | Tool | Purpose | Install |

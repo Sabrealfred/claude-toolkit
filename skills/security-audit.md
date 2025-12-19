@@ -7,6 +7,75 @@ description: Security audit expert for code scanning, vulnerability detection, O
 
 Comprehensive security auditing with best-in-class tools and MCPs.
 
+## Required Tools & Dependencies
+
+### CLI Tools
+```bash
+# Node.js security audit (built-in)
+npm audit
+npm audit fix
+
+# Snyk CLI (vulnerability scanning)
+npm install -g snyk
+snyk auth
+snyk test
+
+# Trivy (container/IaC scanning)
+brew install trivy  # macOS
+apt install trivy   # Ubuntu
+trivy fs .          # Scan filesystem
+```
+
+### NPM Packages
+```bash
+# ESLint Security Plugins
+npm install -D eslint eslint-plugin-security eslint-plugin-no-secrets
+
+# Retire.js (known vulnerabilities)
+npm install -D retire
+```
+
+### Security Scanning Tools
+```bash
+# Semgrep (static analysis)
+pip install semgrep
+semgrep scan --config auto .
+
+# OWASP Dependency-Check
+# Download from: https://owasp.org/www-project-dependency-check/
+dependency-check --project "myproject" --scan ./
+
+# Nuclei (vulnerability scanner)
+go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+nuclei -u https://target.com -t cves/
+```
+
+### ESLint Security Config
+```json
+// .eslintrc.json
+{
+  "extends": ["plugin:security/recommended"],
+  "plugins": ["security", "no-secrets"],
+  "rules": {
+    "security/detect-object-injection": "warn",
+    "security/detect-non-literal-fs-filename": "warn",
+    "security/detect-eval-with-expression": "error",
+    "no-secrets/no-secrets": "error"
+  }
+}
+```
+
+### Quick Security Scan
+```bash
+# Full security audit
+npm audit                          # Dependencies
+npx eslint --ext .js,.ts,.tsx src/ # Code patterns
+snyk test                          # Deep vuln scan
+trivy fs .                         # Container/secrets
+```
+
+---
+
 ## Recommended MCP Servers
 
 ### 1. Semgrep MCP (Static Analysis)
