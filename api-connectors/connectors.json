@@ -1,0 +1,361 @@
+{
+  "generated": "2025-12-19T14:32:28.618Z",
+  "count": 24,
+  "connectors": [
+    {
+      "name": "Hubspot",
+      "baseUrl": "https://api.hubapi.com",
+      "authType": "OAuth2",
+      "endpoints": [
+        "/resolveData",
+        "/tickets/paged"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ]
+    },
+    {
+      "name": "Salesforce",
+      "baseUrl": null,
+      "authType": "OAuth2",
+      "endpoints": [
+        "/test-endpoint",
+        "/sandbox-endpoint",
+        "/default-endpoint",
+        "/custom-uri"
+      ],
+      "methods": [
+        "POST",
+        "GET",
+        "DELETE",
+        "PATCH"
+      ]
+    },
+    {
+      "name": "Stripe",
+      "baseUrl": "https://api.stripe.com",
+      "authType": null,
+      "endpoints": [],
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE"
+      ]
+    },
+    {
+      "name": "Shopify",
+      "baseUrl": null,
+      "authType": "OAuth2",
+      "endpoints": [],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ]
+    },
+    {
+      "name": "Slack",
+      "baseUrl": "https://api.slack.com",
+      "authType": "OAuth2",
+      "endpoints": [
+        "/authentication",
+        "/select",
+        "/test"
+      ],
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "name": "Discord",
+      "baseUrl": "https://discord.com/api",
+      "authType": "OAuth2",
+      "endpoints": [],
+      "methods": [
+        "POST",
+        "GET",
+        "DELETE",
+        "PATCH",
+        "PUT"
+      ]
+    },
+    {
+      "name": "Telegram",
+      "baseUrl": null,
+      "authType": null,
+      "endpoints": [],
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "name": "Google",
+      "baseUrl": "https://console.developers.google.com/api",
+      "authType": "OAuth2",
+      "endpoints": [
+        "/v20/customers/",
+        "/googleAds:search",
+        "/postType",
+        "/reply",
+        "/calendar/v3/users/me/calendarList",
+        "/b/",
+        "/o/",
+        "/projection",
+        "/gmail/v1/users/me/labels",
+        "/calendar/v3/calendars",
+        "/calendar/v3/calendars/primary/events",
+        "/calendar/v3/calendars/test",
+        "/calendar/v3/test",
+        "/people/me",
+        "/custom",
+        "/people/123",
+        "/people",
+        "/people/connections",
+        "/people/invalid",
+        "/custom/endpoint",
+        "/d/",
+        "/folders/",
+        "/example/resource",
+        "/operation",
+        "/rawData",
+        "/databases/test/documents/users",
+        "/test",
+        "/options",
+        "/users",
+        "/dataMode"
+      ],
+      "methods": [
+        "POST",
+        "GET",
+        "DELETE",
+        "PATCH",
+        "PUT"
+      ]
+    },
+    {
+      "name": "Airtable",
+      "baseUrl": "https://api.airtable.com",
+      "authType": "OAuth2",
+      "endpoints": [],
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE",
+        "PATCH"
+      ]
+    },
+    {
+      "name": "Notion",
+      "baseUrl": "https://api.notion.com",
+      "authType": "OAuth2",
+      "endpoints": [
+        "/resource",
+        "/operation"
+      ],
+      "methods": [
+        "POST",
+        "GET",
+        "PATCH"
+      ]
+    },
+    {
+      "name": "Supabase",
+      "baseUrl": null,
+      "authType": "Bearer Token",
+      "endpoints": [],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH"
+      ]
+    },
+    {
+      "name": "Postgres",
+      "baseUrl": null,
+      "authType": null,
+      "endpoints": [],
+      "methods": [
+        "DELETE"
+      ]
+    },
+    {
+      "name": "OpenAi",
+      "baseUrl": "https://api.openai.com",
+      "authType": null,
+      "endpoints": [
+        "/v1/chat/completions",
+        "/v1/models",
+        "/operation",
+        "/v1/images/generations",
+        "/model",
+        "/v1/completions",
+        "/v1/edits",
+        "/v1/moderations"
+      ],
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "name": "Asana",
+      "baseUrl": "https://app.asana.com/api",
+      "authType": "OAuth2",
+      "endpoints": [
+        "/workspaces"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ]
+    },
+    {
+      "name": "Trello",
+      "baseUrl": "https://api.trello.com",
+      "authType": null,
+      "endpoints": [],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ]
+    },
+    {
+      "name": "Mailchimp",
+      "baseUrl": null,
+      "authType": "OAuth2",
+      "endpoints": [],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ]
+    },
+    {
+      "name": "SendGrid",
+      "baseUrl": "https://api.sendgrid.com",
+      "authType": null,
+      "endpoints": [],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH"
+      ]
+    },
+    {
+      "name": "Twilio",
+      "baseUrl": "https://api.twilio.com",
+      "authType": "API Key",
+      "endpoints": [],
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE"
+      ]
+    },
+    {
+      "name": "Github",
+      "baseUrl": "https://api.github.com",
+      "authType": "OAuth2",
+      "endpoints": [
+        "/repos/test-owner/test-repo",
+        "/repos/test-owner/test-repo/issues"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH"
+      ]
+    },
+    {
+      "name": "Linear",
+      "baseUrl": null,
+      "authType": "OAuth2",
+      "endpoints": [],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "name": "Jira",
+      "baseUrl": null,
+      "authType": null,
+      "endpoints": [
+        "/api/2/users/search",
+        "/api/2/user/search",
+        "/api/2/serverInfo",
+        "/webhooks/1.0/webhook",
+        "/jira-webhook/1.0/webhooks",
+        "/jiraVersion",
+        "/api/2/search"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ]
+    },
+    {
+      "name": "ClickUp",
+      "baseUrl": "https://api.clickup.com",
+      "authType": "OAuth2",
+      "endpoints": [],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ]
+    },
+    {
+      "name": "Pipedrive",
+      "baseUrl": "https://api.pipedrive.com",
+      "authType": "OAuth2",
+      "endpoints": [
+        "/activityFields",
+        "/dealFields",
+        "/organizationFields",
+        "/personFields",
+        "/productFields"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH"
+      ]
+    },
+    {
+      "name": "Zendesk",
+      "baseUrl": "https://developer.zendesk.com/api",
+      "authType": "OAuth2",
+      "endpoints": [
+        "/ticketType"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ]
+    }
+  ]
+}
