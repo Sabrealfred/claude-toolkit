@@ -152,6 +152,62 @@ const results = await runSwarm({
 });
 ```
 
+### Weaviate RAG (`/weaviate-rag`)
+
+GPU-accelerated vector search for codebase understanding and persistent memory:
+
+```bash
+cd weaviate-rag
+docker compose up -d  # Start Weaviate with GPU
+npm install
+node scripts/discover-projects.js  # Auto-discover projects in /root
+node scripts/auto-index.js         # Index all projects
+node src/mcp-server.js             # Start MCP server
+```
+
+**Features:**
+- **Hybrid Search**: 70% vector + 30% BM25 keyword matching
+- **GPU Acceleration**: MiniLM-L6 embeddings on CUDA
+- **Code Intelligence**: Indexes functions, components, hooks, services, classes
+- **Conversation Memory**: Indexes past Claude Code sessions for context
+- **Auto-Discovery**: Finds projects in /root automatically
+- **Watch Mode**: Re-indexes on file changes
+
+**MCP Tools:**
+| Tool | Description |
+|------|-------------|
+| `weaviate_search` | Semantic + keyword code search |
+| `weaviate_context` | Build context bundle for a file (imports, dependencies) |
+| `weaviate_types` | Search TypeScript type definitions |
+| `weaviate_similar` | Find similar code patterns |
+| `weaviate_memories` | Search past conversation sessions |
+| `weaviate_status` | Check index status |
+
+**Example:**
+```javascript
+// Search for authentication code
+const results = await search({
+  query: "where do we handle user authentication",
+  alpha: 0.7,  // 70% semantic, 30% keyword
+  limit: 10
+});
+
+// Get full context for a file
+const context = await getContext({
+  filePath: "src/services/authService.ts",
+  includeTypes: true,
+  maxFiles: 10
+});
+
+// Search past conversations
+const memories = await searchMemories({
+  query: "supabase RLS policy discussion",
+  project: "matwal-premium"
+});
+```
+
+See `weaviate-rag/README.md` for detailed documentation.
+
 ### Model Finder (`model-finder.js`)
 
 Find the best model for your task:
@@ -189,12 +245,27 @@ claude-toolkit/
 │   ├── model-finder.js        # Model routing
 │   ├── credentials.template.js # Template (fill with your keys)
 │   └── connectors.json        # Service configurations
+├── weaviate-rag/              # Vector search & memory
+│   ├── docker-compose.yml     # Weaviate with GPU
+│   ├── src/
+│   │   ├── mcp-server.js      # MCP server for Claude Code
+│   │   ├── indexer.js         # Code indexer
+│   │   └── memory.js          # Persistent memory
+│   ├── scripts/
+│   │   ├── discover-projects.js
+│   │   ├── auto-index.js
+│   │   ├── conversation-indexer.js
+│   │   └── daemon.js
+│   └── config/
+│       └── projects.json      # Discovered projects
 ├── skills/
 │   ├── devops.md
 │   ├── react-expert.md
 │   └── ... (24 skills)
 ├── docs/
-│   └── VERSION.md             # Version registry
+│   ├── VERSION.md             # Version registry
+│   ├── CONNECTORS_COMPARISON.md
+│   └── SAAS_ROADMAP.md
 ├── examples/
 └── templates/
 ```
@@ -234,6 +305,8 @@ claude-toolkit/
 |------|-----------------|---------|
 | **Ollama** | `curl -fsSL https://ollama.com/install.sh \| sh` | Local LLM inference |
 | **LM Studio** | [lmstudio.ai](https://lmstudio.ai) | Local model GUI |
+| **Weaviate** | `docker compose up -d` (in weaviate-rag/) | Vector database with GPU |
+| **NVIDIA Container Toolkit** | [nvidia.github.io/libnvidia-container](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) | GPU in Docker |
 
 ### AI SDKs (npm packages)
 
