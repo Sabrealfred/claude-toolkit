@@ -1,0 +1,222 @@
+#!/usr/bin/env node
+/**
+ * Conversation Memory for Claude Code
+ *
+ * Implements persistent memory using Weaviate vector search.
+ * Part of our "Context Engineering" stack.
+ *
+ * Usage:
+ *   // Save a session
+ *   node memory.js save --session "abc123" --project "matwal-premium" \
+ *     --summary "Implemented Weaviate RAG with GPU embeddings" \
+ *     --decisions "Use MiniLM-L6 model" "Index 7 projects" \
+ *     --files "weaviate-rag.js" "server.js"
+ *
+ *   // Search memories
+ *   node memory.js search "how did we implement RAG?"
+ *
+ *   // List recent
+ *   node memory.js list --project "matwal-premium" --limit 5
+ */
+
+import weaviate from 'weaviate-client';
+
+const WEAVIATE_HOST = 'localhost';
+const WEAVIATE_PORT = 8080;
+const WEAVIATE_GRPC = 50051;
+
+async function getClient() {
+  return await weaviate.connectToLocal({
+    host: WEAVIATE_HOST,
+    port: WEAVIATE_PORT,
+    grpcPort: WEAVIATE_GRPC
+  });
+}
+
+/**
+ * Save a conversation memory
+ */
+export async function saveMemory({
+  sessionId,
+  summary,
+  decisions = [],
+  filesModified = [],
+  project = 'general',
+  topics = []
+}) {
+  const client = await getClient();
+  const collection = client.collections.get('ConversationMemory');
+
+  await collection.data.insert({
+    sessionId,
+    summary,
+    decisions,
+    filesModified,
+    project,
+    topics,
+    timestamp: new Date().toISOString()
+  });
+
+  console.log(`✅ Memory saved: ${sessionId}`);
+  await client.close();
+}
+
+/**
+ * Search memories semantically
+ */
+export async function searchMemories(query, { project = null, limit = 5 } = {}) {
+  const client = await getClient();
+  const collection = client.collections.get('ConversationMemory');
+
+  const filter = project
+    ? collection.filter.byProperty('project').equal(project)
+    : null;
+
+  const result = await collection.query.hybrid(query, {
+    limit,
+    alpha: 0.7,
+    returnProperties: ['sessionId', 'summary', 'decisions', 'filesModified', 'project', 'topics', 'timestamp'],
+    ...(filter && { filters: filter })
+  });
+
+  await client.close();
+
+  return result.objects.map(obj => ({
+    sessionId: obj.properties.sessionId,
+    summary: obj.properties.summary,
+    decisions: obj.properties.decisions || [],
+    files: obj.properties.filesModified || [],
+    project: obj.properties.project,
+    topics: obj.properties.topics || [],
+    date: obj.properties.timestamp
+  }));
+}
+
+/**
+ * List recent memories
+ */
+export async function listMemories({ project = null, limit = 10 } = {}) {
+  const client = await getClient();
+  const collection = client.collections.get('ConversationMemory');
+
+  const filter = project
+    ? collection.filter.byProperty('project').equal(project)
+    : null;
+
+  const result = await collection.query.fetchObjects({
+    limit,
+    returnProperties: ['sessionId', 'summary', 'project', 'timestamp'],
+    ...(filter && { filters: filter })
+  });
+
+  await client.close();
+
+  return result.objects.map(obj => ({
+    sessionId: obj.properties.sessionId,
+    summary: obj.properties.summary?.substring(0, 100) + '...',
+    project: obj.properties.project,
+    date: obj.properties.timestamp
+  }));
+}
+
+/**
+ * Get context for a new session (retrieve relevant memories)
+ */
+export async function getSessionContext(query, project = null) {
+  const memories = await searchMemories(query, { project, limit: 3 });
+
+  if (memories.length === 0) {
+    return '';
+  }
+
+  let context = '## Previous Session Context\n\n';
+  for (const mem of memories) {
+    context += `### Session: ${mem.sessionId} (${mem.date?.split('T')[0] || 'unknown'})\n`;
+    context += `${mem.summary}\n`;
+    if (mem.decisions.length > 0) {
+      context += `**Decisions:** ${mem.decisions.join(', ')}\n`;
+    }
+    if (mem.files.length > 0) {
+      context += `**Files:** ${mem.files.join(', ')}\n`;
+    }
+    context += '\n';
+  }
+
+  return context;
+}
+
+// CLI
+if (process.argv[1].includes('memory.js')) {
+  const args = process.argv.slice(2);
+  const command = args[0];
+
+  if (command === 'save') {
+    const sessionId = args[args.indexOf('--session') + 1] || `session-${Date.now()}`;
+    const project = args[args.indexOf('--project') + 1] || 'general';
+    const summary = args[args.indexOf('--summary') + 1] || '';
+
+    // Parse array args
+    const decisionsIdx = args.indexOf('--decisions');
+    const filesIdx = args.indexOf('--files');
+    const topicsIdx = args.indexOf('--topics');
+
+    const decisions = decisionsIdx >= 0 ?
+      args.slice(decisionsIdx + 1).filter(a => !a.startsWith('--')) : [];
+    const files = filesIdx >= 0 ?
+      args.slice(filesIdx + 1).filter(a => !a.startsWith('--')) : [];
+    const topics = topicsIdx >= 0 ?
+      args.slice(topicsIdx + 1).filter(a => !a.startsWith('--')) : [];
+
+    saveMemory({ sessionId, summary, decisions, filesModified: files, project, topics })
+      .catch(console.error);
+
+  } else if (command === 'search') {
+    const query = args[1] || '';
+    const project = args.includes('--project') ? args[args.indexOf('--project') + 1] : null;
+
+    searchMemories(query, { project })
+      .then(results => {
+        console.log('\n=== Memory Search Results ===\n');
+        results.forEach((r, i) => {
+          console.log(`[${i + 1}] ${r.project} - ${r.date?.split('T')[0] || 'unknown'}`);
+          console.log(`    ${r.summary}`);
+          if (r.decisions.length) console.log(`    Decisions: ${r.decisions.join(', ')}`);
+          console.log('');
+        });
+      })
+      .catch(console.error);
+
+  } else if (command === 'list') {
+    const project = args.includes('--project') ? args[args.indexOf('--project') + 1] : null;
+    const limit = args.includes('--limit') ? parseInt(args[args.indexOf('--limit') + 1]) : 10;
+
+    listMemories({ project, limit })
+      .then(results => {
+        console.log('\n=== Recent Memories ===\n');
+        results.forEach((r, i) => {
+          console.log(`[${i + 1}] ${r.project} | ${r.date?.split('T')[0] || 'unknown'}`);
+          console.log(`    ${r.summary}`);
+        });
+      })
+      .catch(console.error);
+
+  } else if (command === 'context') {
+    const query = args[1] || '';
+    const project = args.includes('--project') ? args[args.indexOf('--project') + 1] : null;
+
+    getSessionContext(query, project)
+      .then(context => console.log(context || 'No relevant memories found.'))
+      .catch(console.error);
+
+  } else {
+    console.log(`
+Usage:
+  node memory.js save --session ID --project NAME --summary "..." --decisions "..." --files "..."
+  node memory.js search "query" [--project NAME]
+  node memory.js list [--project NAME] [--limit N]
+  node memory.js context "query" [--project NAME]
+    `);
+  }
+}
+
+export default { saveMemory, searchMemories, listMemories, getSessionContext };

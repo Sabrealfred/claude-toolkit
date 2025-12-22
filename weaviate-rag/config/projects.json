@@ -1,0 +1,171 @@
+{
+  "projects": [
+    {
+      "name": "refine-temp",
+      "path": "/root/refine-temp",
+      "language": "typescript",
+      "priority": 1,
+      "fileCount": 5411
+    },
+    {
+      "name": "matwal-premium",
+      "path": "/root/matwal-premium",
+      "language": "typescript",
+      "priority": 2,
+      "fileCount": 1353
+    },
+    {
+      "name": "matwal-atlas",
+      "path": "/root/matwal-atlas",
+      "language": "typescript",
+      "priority": 3,
+      "fileCount": 920
+    },
+    {
+      "name": "matwal-maverick",
+      "path": "/root/matwal-maverick",
+      "language": "typescript",
+      "priority": 4,
+      "fileCount": 428
+    },
+    {
+      "name": "atomic-crm",
+      "path": "/root/atomic-crm",
+      "language": "typescript",
+      "priority": 5,
+      "fileCount": 282
+    },
+    {
+      "name": "atomic-crm-review",
+      "path": "/root/atomic-crm-review",
+      "language": "typescript",
+      "priority": 6,
+      "fileCount": 282
+    },
+    {
+      "name": "matwal-website",
+      "path": "/root/matwal-website",
+      "language": "typescript",
+      "priority": 7,
+      "fileCount": 270
+    },
+    {
+      "name": "marsala.dev",
+      "path": "/root/marsala.dev",
+      "language": "typescript",
+      "priority": 8,
+      "fileCount": 97
+    },
+    {
+      "name": "Marsala-dev1",
+      "path": "/root/Marsala-dev1",
+      "language": "typescript",
+      "priority": 9,
+      "fileCount": 82
+    },
+    {
+      "name": "braccia-capital",
+      "path": "/root/braccia-capital",
+      "language": "typescript",
+      "priority": 10,
+      "fileCount": 77
+    },
+    {
+      "name": "Marsala.dev",
+      "path": "/root/Marsala.dev",
+      "language": "typescript",
+      "priority": 11,
+      "fileCount": 59
+    },
+    {
+      "name": "matwal-shared",
+      "path": "/root/matwal-shared",
+      "language": "typescript",
+      "priority": 12,
+      "fileCount": 58
+    },
+    {
+      "name": "marsala-backend",
+      "path": "/root/marsala-backend",
+      "language": "typescript",
+      "priority": 13,
+      "fileCount": 13
+    },
+    {
+      "name": "weaviate-rag",
+      "path": "/root/weaviate-rag",
+      "language": "typescript",
+      "priority": 14,
+      "fileCount": 10
+    },
+    {
+      "name": "puppeteer-mcp-claude",
+      "path": "/root/puppeteer-mcp-claude",
+      "language": "typescript",
+      "priority": 15,
+      "fileCount": 8
+    },
+    {
+      "name": "LMStudio-MCP",
+      "path": "/root/LMStudio-MCP",
+      "language": "python",
+      "priority": 16,
+      "fileCount": 1046
+    },
+    {
+      "name": "ai-orchestrator",
+      "path": "/root/ai-orchestrator",
+      "language": "python",
+      "priority": 17,
+      "fileCount": 750
+    },
+    {
+      "name": "groq-mcp-server",
+      "path": "/root/groq-mcp-server",
+      "language": "python",
+      "priority": 18,
+      "fileCount": 20
+    },
+    {
+      "name": "trading-rl",
+      "path": "/root/trading-rl",
+      "language": "python",
+      "priority": 19,
+      "fileCount": 18
+    },
+    {
+      "name": "poetiq-arc-agi-solver",
+      "path": "/root/poetiq-arc-agi-solver",
+      "language": "python",
+      "priority": 20,
+      "fileCount": 13
+    },
+    {
+      "name": "automated",
+      "path": "/root/automated",
+      "language": "python",
+      "priority": 21,
+      "fileCount": 3
+    }
+  ],
+  "globalExclude": [
+    "node_modules/**",
+    "dist/**",
+    ".next/**",
+    "build/**",
+    "**/*.min.js",
+    "**/*.bundle.js",
+    "**/vendor/**",
+    "**/__snapshots__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.d.ts",
+    "**/__pycache__/**"
+  ],
+  "autoDiscovery": {
+    "enabled": true,
+    "lastRun": "2025-12-21T17:11:39.157Z",
+    "projectCount": 21
+  }
+}

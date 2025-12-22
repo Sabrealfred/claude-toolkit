@@ -1,0 +1,31 @@
+{
+  "name": "weaviate-rag",
+  "version": "1.0.0",
+  "description": "Professional RAG system for code intelligence with Weaviate",
+  "type": "module",
+  "scripts": {
+    "start": "node src/mcp-server.js",
+    "index": "node scripts/indexer.js",
+    "index:matwal": "node scripts/indexer.js --project matwal-premium --path /root/matwal-premium",
+    "index:all": "node scripts/index-all.js",
+    "search": "node scripts/search.js",
+    "status": "node scripts/status.js",
+    "reset": "node scripts/reset.js",
+    "dev": "node --watch src/mcp-server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "@typescript-eslint/typescript-estree": "^6.21.0",
+    "glob": "^10.3.10",
+    "typescript": "^5.3.3",
+    "typescript-parser": "^2.6.1",
+    "weaviate-client": "^3.10.0",
+    "weaviate-ts-client": "^2.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
