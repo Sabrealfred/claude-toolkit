@@ -93,7 +93,7 @@ async function indexProject(client, project) {
   console.log(`Path: ${project.path}`);
   console.log('='.repeat(60));
 
-  const includes = project.include || ['src/**/*.ts', 'src/**/*.tsx'];
+  const includes = project.include || ['src/**/*.ts', 'src/**/*.tsx', 'lib/**/*.dart'];
   const excludes = project.exclude || ['node_modules/**', 'dist/**'];
 
   const files = await getFilesToIndex(project.path, includes, excludes);
@@ -107,9 +107,9 @@ async function indexProject(client, project) {
     const fullPath = join(project.path, file);
 
     try {
-      // Skip if not a TS/TSX/JS file
+      // Skip unsupported file types
       const ext = extname(file);
-      if (!['.ts', '.tsx', '.js', '.jsx'].includes(ext)) continue;
+      if (!['.ts', '.tsx', '.js', '.jsx', '.dart'].includes(ext)) continue;
 
       // Parse file into chunks
       const chunks = parseFile(fullPath, project.name);
@@ -249,8 +249,8 @@ async function main() {
       {
         name: projectName,
         path: projectPath,
-        include: ['src/**/*.ts', 'src/**/*.tsx'],
-        exclude: ['node_modules/**', 'dist/**', '*.test.ts', '*.test.tsx'],
+        include: ['src/**/*.ts', 'src/**/*.tsx', 'lib/**/*.dart'],
+        exclude: ['node_modules/**', 'dist/**', '*.test.ts', '*.test.tsx', 'build/**'],
       },
     ];
   } else {

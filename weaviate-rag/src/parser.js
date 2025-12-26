@@ -15,25 +15,30 @@ import { readFileSync } from 'fs';
 import { basename, extname } from 'path';
 
 /**
- * Parse a TypeScript/JavaScript file into logical chunks
+ * Parse a TypeScript/JavaScript/Dart file into logical chunks
  */
 export function parseFile(filePath, projectName) {
   const content = readFileSync(filePath, 'utf-8');
   const lines = content.split('\n');
   const ext = extname(filePath);
+  const isDart = ext === '.dart';
 
   // Extract file-level metadata
-  const imports = extractImports(content);
-  const fileExports = extractExports(content);
+  const imports = isDart ? extractDartImports(content) : extractImports(content);
+  const fileExports = isDart ? [] : extractExports(content);
 
   // Parse different chunk types
   const chunks = [];
 
   // 1. Extract functions
-  chunks.push(...extractFunctions(content, lines, filePath, projectName, imports));
+  if (isDart) {
+    chunks.push(...extractDartFunctions(content, lines, filePath, projectName, imports));
+  } else {
+    chunks.push(...extractFunctions(content, lines, filePath, projectName, imports));
+  }
 
   // 2. Extract classes
-  chunks.push(...extractClasses(content, lines, filePath, projectName, imports));
+  chunks.push(...extractClasses(content, lines, filePath, projectName, imports, isDart));
 
   // 3. Extract type definitions (only for .ts/.tsx)
   if (ext === '.ts' || ext === '.tsx') {
@@ -45,6 +50,7 @@ export function parseFile(filePath, projectName) {
     ...chunk,
     imports: imports.map((i) => i.source),
     fileExports,
+    language: isDart ? 'dart' : (ext === '.tsx' ? 'tsx' : 'typescript'),
   }));
 }
 
@@ -296,10 +302,10 @@ function extractFunctions(content, lines, filePath, projectName, imports) {
 /**
  * Extract classes
  */
-function extractClasses(content, lines, filePath, projectName, imports) {
+function extractClasses(content, lines, filePath, projectName, imports, isDart = false) {
   const chunks = [];
 
-  const classPattern = /(?:export\s+)?(?:abstract\s+)?class\s+(\w+)(?:\s+extends\s+[\w<>,\s]+)?(?:\s+implements\s+[\w<>,\s]+)?\s*\{/g;
+  const classPattern = /(?:export\s+)?(?:abstract\s+)?class\s+(\w+)(?:\s+extends\s+[\w<>,\s]+)?(?:\s+(?:implements|with)\s+[\w<>,\s]+)*\s*\{/g;
 
   let match;
   while ((match = classPattern.exec(content)) !== null) {
@@ -322,7 +328,7 @@ function extractClasses(content, lines, filePath, projectName, imports) {
       filePath,
       project: projectName,
       chunkType: 'class',
-      language: extname(filePath) === '.tsx' ? 'tsx' : 'typescript',
+      language: isDart ? 'dart' : (extname(filePath) === '.tsx' ? 'tsx' : 'typescript'),
       lineStart,
       lineEnd,
       lineCount: lineEnd - lineStart + 1,
@@ -330,8 +336,8 @@ function extractClasses(content, lines, filePath, projectName, imports) {
       signature: match[0].trim(),
       isExported,
       isAsync: false,
-      usedTypes: extractUsedTypes(chunkContent),
-      dependencies: extractDependencies(chunkContent, imports),
+      usedTypes: isDart ? [] : extractUsedTypes(chunkContent),
+      dependencies: isDart ? [] : extractDependencies(chunkContent, imports),
       complexity: estimateComplexity(chunkContent),
     });
   }
@@ -526,6 +532,86 @@ function estimateComplexity(content) {
   }
 
   return complexity;
+}
+
+/**
+ * Extract Dart import statements
+ */
+function extractDartImports(content) {
+  const imports = [];
+  const importRegex = /import\s+['"]([^'"]+)['"]/g;
+
+  let match;
+  while ((match = importRegex.exec(content)) !== null) {
+    imports.push({
+      statement: match[0],
+      source: match[1],
+    });
+  }
+
+  return imports;
+}
+
+/**
+ * Extract Dart functions
+ */
+function extractDartFunctions(content, lines, filePath, projectName, imports) {
+  const chunks = [];
+
+  const pattern = /(?:@override\s+)?(?:Future<)?(\w+)>?\s+(\w+)\s*\([^)]*\)\s*(?:async\s*)?\{/g;
+
+  let match;
+  while ((match = pattern.exec(content)) !== null) {
+    const returnType = match[1];
+    const name = match[2];
+
+    if (['if', 'for', 'while', 'switch', 'catch', 'class'].includes(name)) continue;
+
+    const startPos = match.index;
+    const jsDoc = extractJSDoc(content, startPos);
+    const lineStart = getLineNumber(content, startPos);
+
+    const bracePos = content.indexOf('{', startPos + match[0].length - 1);
+    if (bracePos === -1) continue;
+
+    const endPos = findMatchingBrace(content, bracePos);
+    const lineEnd = getLineNumber(content, endPos);
+
+    const chunkContent = content.substring(startPos, endPos + 1);
+
+    let chunkType = 'function';
+    if (name === 'build' && returnType === 'Widget') {
+      chunkType = 'component';
+    } else if (filePath.includes('/services/')) {
+      chunkType = 'service';
+    } else if (filePath.includes('/providers/')) {
+      chunkType = 'provider';
+    }
+
+    const isAsync = match[0].includes('async') || match[0].includes('Future');
+
+    chunks.push({
+      type: 'CodeChunk',
+      name,
+      content: jsDoc ? `${jsDoc}\n${chunkContent}` : chunkContent,
+      filePath,
+      project: projectName,
+      chunkType,
+      language: 'dart',
+      lineStart,
+      lineEnd,
+      lineCount: lineEnd - lineStart + 1,
+      jsDoc,
+      signature: match[0].trim(),
+      isExported: true,
+      isAsync,
+      usedTypes: [],
+      dependencies: [],
+      complexity: estimateComplexity(chunkContent),
+    });
+  }
+
+  return chunks;
 }
 
 export default { parseFile };
