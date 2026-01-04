@@ -5,11 +5,18 @@
  * Provides semantic code search for Claude Code via MCP protocol.
  *
  * Tools:
- * - weaviate_search: Hybrid search (semantic + keyword)
+ * - weaviate_search: Hybrid search (semantic + keyword) with optional:
+ *     - rewrite: Query expansion and synonym addition
+ *     - autocut: Automatic result filtering based on score gaps
+ * - weaviate_search_advanced: Full RAG pipeline combining:
+ *     - Query rewriting
+ *     - Reflexive multi-attempt search
+ *     - Automatic result filtering
  * - weaviate_context: Build context bundle following imports
  * - weaviate_types: Find type definitions
  * - weaviate_similar: Find similar code
  * - weaviate_status: Check index status
+ * - weaviate_memories: Search past conversation memories
  */
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -22,6 +29,11 @@ import weaviate from 'weaviate-ts-client';
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 
+// Import RAG enhancement modules
+import { rewriteQuery, optimizeForCodeSearch } from './query-rewriter.js';
+import { autoCut, adaptiveAutoCut, analyzeScores } from './autocut.js';
+import { reflexiveSearch, createSearchFn } from './reflexion.js';
+
 // Configuration
 const WEAVIATE_URL = process.env.WEAVIATE_URL || 'http://localhost:8080';
 const DEFAULT_PROJECT = process.env.DEFAULT_PROJECT || 'matwal-premium';
@@ -31,9 +43,11 @@ let client = null;
 
 async function getClient() {
   if (!client) {
+    // Parse WEAVIATE_URL to extract scheme and host
+    const url = new URL(WEAVIATE_URL);
     client = weaviate.client({
-      scheme: 'http',
-      host: 'localhost:8080',
+      scheme: url.protocol.replace(':', ''),
+      host: url.host,
     });
   }
   return client;
@@ -45,6 +59,7 @@ async function getClient() {
 
 /**
  * Hybrid search combining semantic + keyword search with reranking
+ * Now supports optional query rewriting and autocut
  */
 async function hybridSearch(query, options = {}) {
   const {
@@ -53,9 +68,25 @@ async function hybridSearch(query, options = {}) {
     chunkTypes = null,  // ['function', 'component', 'hook', etc.]
     alpha = 0.5,  // 0 = keyword only, 1 = vector only, 0.5 = balanced
     rerank = true,
+    rewrite = false,  // Enable query rewriting
+    autocut = false,  // Enable automatic result filtering
   } = options;
 
   const wv = await getClient();
+
+  // Optional query rewriting
+  let searchQuery = query;
+  let rewriteMetadata = null;
+  if (rewrite) {
+    const rewritten = optimizeForCodeSearch(query);
+    searchQuery = rewritten.primary;
+    rewriteMetadata = {
+      original: query,
+      rewritten: rewritten.primary,
+      variants: rewritten.all,
+      synonymsUsed: rewritten.metadata.synonymsUsed,
+    };
+  }
 
   // Build where filter
   const whereFilter = {
@@ -81,16 +112,18 @@ async function hybridSearch(query, options = {}) {
   }
 
   try {
-    // Perform hybrid search
+    // Perform hybrid search - get more results if autocut is enabled
+    const fetchLimit = autocut ? Math.max(limit * 3, 30) : (rerank ? limit * 2 : limit);
+
     let queryBuilder = wv.graphql
       .get()
       .withClassName('CodeChunk')
       .withHybrid({
-        query,
+        query: searchQuery,
         alpha,
       })
       .withWhere(whereFilter)
-      .withLimit(rerank ? limit * 2 : limit)  // Get more for reranking
+      .withLimit(fetchLimit)
       .withFields(
         'name content filePath chunkType lineStart lineEnd jsDoc signature isExported complexity _additional { score }'
       );
@@ -98,13 +131,38 @@ async function hybridSearch(query, options = {}) {
     const result = await queryBuilder.do();
     let chunks = result.data?.Get?.CodeChunk || [];
 
-    // Rerank if enabled and reranker is available
-    if (rerank && chunks.length > limit) {
-      chunks = await rerankResults(query, chunks, limit);
+    // Apply autocut if enabled
+    let autocutMetadata = null;
+    if (autocut && chunks.length > 0) {
+      // Prepare results with score for autocut
+      const resultsWithScore = chunks.map(c => ({
+        ...c,
+        score: parseFloat(c._additional?.score) || 0,
+      }));
+
+      const autocutResult = adaptiveAutoCut(resultsWithScore, {
+        maxResults: limit,
+        minResults: Math.min(3, limit),
+      });
+
+      chunks = autocutResult.results;
+      autocutMetadata = {
+        method: 'adaptive',
+        originalCount: autocutResult.totalResults,
+        keptCount: autocutResult.cutIndex,
+        gapFound: autocutResult.gapFound,
+        largestGap: autocutResult.largestGap,
+      };
+    } else if (rerank && chunks.length > limit) {
+      // Rerank if enabled and reranker is available
+      chunks = await rerankResults(searchQuery, chunks, limit);
+    } else {
+      chunks = chunks.slice(0, limit);
     }
 
-    return {
-      query,
+    const response = {
+      query: searchQuery,
+      originalQuery: rewrite ? query : undefined,
       project,
       resultCount: chunks.length,
       results: chunks.map((c, i) => ({
@@ -114,13 +172,109 @@ async function hybridSearch(query, options = {}) {
         file: `${c.filePath}:${c.lineStart}`,
         signature: c.signature,
         jsDoc: c.jsDoc?.substring(0, 200),
-        score: c._additional?.score,
+        score: c._additional?.score || c.score,
         content: c.content,
       })),
     };
+
+    // Add metadata about enhancements if used
+    if (rewriteMetadata) {
+      response.rewriteMetadata = rewriteMetadata;
+    }
+    if (autocutMetadata) {
+      response.autocutMetadata = autocutMetadata;
+    }
+
+    return response;
   } catch (error) {
     return { error: error.message, query, project };
   }
+}
+
+/**
+ * Advanced search combining all RAG features: rewriting + reflexion + autocut
+ */
+async function advancedSearch(query, options = {}) {
+  const {
+    project = DEFAULT_PROJECT,
+    limit = 10,
+    chunkTypes = null,
+    threshold = 0.5,  // Quality threshold for reflexion
+    maxAttempts = 3,  // Max reflexion attempts
+  } = options;
+
+  const startTime = Date.now();
+
+  // Create search function for reflexion
+  const searchFn = createSearchFn(
+    async (q, alpha) => {
+      const result = await hybridSearch(q, {
+        project,
+        limit: limit * 2,  // Get more for reflexion to work with
+        chunkTypes,
+        alpha,
+        rewrite: false,  // Reflexion handles query reformulation
+        autocut: false,  // We'll apply autocut at the end
+      });
+      return result.results || [];
+    },
+    {}
+  );
+
+  // Run reflexive search
+  const reflexionResult = await reflexiveSearch(query, searchFn, {
+    threshold,
+    maxAttempts,
+    limit: limit * 2,
+    verbose: false,
+  });
+
+  // Apply autocut to final results
+  let finalResults = reflexionResult.results;
+  let autocutMetadata = null;
+
+  if (finalResults.length > 0) {
+    const autocutResult = adaptiveAutoCut(finalResults, {
+      maxResults: limit,
+      minResults: Math.min(3, limit),
+    });
+
+    finalResults = autocutResult.results;
+    autocutMetadata = {
+      method: 'adaptive',
+      originalCount: autocutResult.totalResults,
+      keptCount: autocutResult.cutIndex,
+      gapFound: autocutResult.gapFound,
+    };
+  }
+
+  const elapsed = Date.now() - startTime;
+
+  return {
+    query,
+    project,
+    resultCount: finalResults.length,
+    results: finalResults.slice(0, limit).map((r, i) => ({
+      rank: i + 1,
+      name: r.name,
+      type: r.type || r.chunkType,
+      file: r.file || `${r.filePath}:${r.lineStart}`,
+      signature: r.signature,
+      jsDoc: r.jsDoc?.substring(0, 200),
+      score: r.score,
+      content: r.content,
+    })),
+    metadata: {
+      totalAttempts: reflexionResult.totalAttempts,
+      qualityMet: reflexionResult.qualityMet,
+      bestScore: reflexionResult.bestScore,
+      threshold,
+      bestAttempt: reflexionResult.bestAttempt,
+      attempts: reflexionResult.attempts,
+      autocut: autocutMetadata,
+      elapsedMs: elapsed,
+    },
+  };
 }
 
 /**
@@ -498,6 +652,50 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             type: 'number',
             description: '0=keyword, 1=semantic, 0.5=balanced (default: 0.5)',
           },
+          rewrite: {
+            type: 'boolean',
+            description: 'Enable query rewriting to expand abbreviations and add synonyms (default: false)',
+          },
+          autocut: {
+            type: 'boolean',
+            description: 'Enable automatic result filtering based on score gaps (default: false)',
+          },
+        },
+        required: ['query'],
+      },
+    },
+    {
+      name: 'weaviate_search_advanced',
+      description:
+        'Advanced search combining all RAG features: query rewriting, reflexive multi-attempt search, and automatic result filtering. Use for complex queries where basic search may not find the best results. Returns detailed metadata about the search process.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          query: {
+            type: 'string',
+            description: 'Natural language search query',
+          },
+          project: {
+            type: 'string',
+            description: 'Project to search in (default: matwal-premium)',
+          },
+          limit: {
+            type: 'number',
+            description: 'Max results (default: 10)',
+          },
+          chunkTypes: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Filter by type: function, component, hook, service, class',
+          },
+          threshold: {
+            type: 'number',
+            description: 'Quality threshold for reflexion (0-1, default: 0.5). Higher values trigger more search attempts.',
+          },
+          maxAttempts: {
+            type: 'number',
+            description: 'Maximum reflexion attempts (default: 3)',
+          },
         },
         required: ['query'],
       },
@@ -623,6 +821,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           limit: args.limit,
           chunkTypes: args.chunkTypes,
           alpha: args.alpha,
+          rewrite: args.rewrite,
+          autocut: args.autocut,
+        });
+        break;
+
+      case 'weaviate_search_advanced':
+        result = await advancedSearch(args.query, {
+          project: args.project,
+          limit: args.limit,
+          chunkTypes: args.chunkTypes,
+          threshold: args.threshold,
+          maxAttempts: args.maxAttempts,
         });
         break;
 

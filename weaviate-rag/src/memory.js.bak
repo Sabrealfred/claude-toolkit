@@ -46,7 +46,7 @@ export async function saveMemory({
   agentType = 'claude-code',
   model = 'unknown',
   taskType = 'chat',
-  parentSessionId = '',
+  parentSessionId = null,
   cost = 0,
   inputTokens = 0,
   outputTokens = 0,
@@ -161,7 +161,7 @@ export async function getSessionContext(query, project = null) {
 }
 
 // CLI
-if (process.argv[1] && process.argv[1].includes('memory.js')) {
+if (process.argv[1].includes('memory.js')) {
   const args = process.argv.slice(2);
   const command = args[0];
 
@@ -234,50 +234,4 @@ Usage:
   }
 }
 
-/**
- * Save an agent memory (for multi-agent systems)
- * Stores task/response pairs with agent metadata for tracking agent work
- */
-export async function saveAgentMemory({
-  sessionId,
-  agentType,
-  model,
-  task,
-  response,
-  taskType,
-  parentSessionId = '',
-  cost = 0,
-  inputTokens = 0,
-  outputTokens = 0,
-  project = 'matwal-premium'
-}) {
-  const client = await getClient();
-  const collection = client.collections.get('ConversationMemory');
-
-  // Create summary from task and response for vector search
-  const summary = `Task: ${task}\n\nResponse: ${response}`;
-
-  await collection.data.insert({
-    sessionId,
-    summary,
-    decisions: [],
-    filesModified: [],
-    project,
-    topics: [],
-    timestamp: new Date().toISOString(),
-    agentType,
-    model,
-    taskType,
-    parentSessionId,
-    cost,
-    inputTokens,
-    outputTokens
-  });
-
-  console.log(`✅ Agent memory saved: ${sessionId} (${agentType}/${model})`);
-  await client.close();
-
-  return { sessionId, agentType, model, taskType, project };
-}
-
-export default { saveMemory, saveAgentMemory, searchMemories, listMemories, getSessionContext };
+export default { saveMemory, searchMemories, listMemories, getSessionContext };

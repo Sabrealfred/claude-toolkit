@@ -38,7 +38,10 @@ function parseConversation(filePath) {
       const entry = JSON.parse(line);
 
       if (entry.type === 'user' && entry.message?.content) {
-        messages.push({ role: 'user', content: entry.message.content });
+        const c = entry.message.content;
+        // Handle both string and array content
+        const text = typeof c === 'string' ? c : (Array.isArray(c) ? c.filter(x => x.type === 'text').map(x => x.text).join(' ') : String(c));
+        messages.push({ role: 'user', content: text });
         if (!firstTimestamp && entry.timestamp) firstTimestamp = entry.timestamp;
         lastTimestamp = entry.timestamp;
       }
@@ -165,11 +168,19 @@ async function indexConversations(projectFilter = null) {
         await collection.data.insert({
           sessionId,
           summary: summary.mainTopic + '\n\n' + summary.keyPoints,
-          decisions: [], // Could extract with LLM later
+          decisions: [],
           filesModified: [],
           project: projectName,
           topics: [],
-          timestamp: lastTimestamp || new Date().toISOString()
+          timestamp: lastTimestamp || new Date().toISOString(),
+          // New agent fields with defaults for Claude Code sessions
+          agentType: 'claude-code',
+          model: 'claude-opus-4-5',
+          taskType: 'conversation',
+          parentSessionId: '',
+          cost: 0,
+          inputTokens: 0,
+          outputTokens: 0
         });
 
         process.stdout.write('+');
